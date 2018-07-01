@@ -1,25 +1,19 @@
 package com.delaroystudios.uploadmedia;
 
 import android.app.ProgressDialog;
-import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.BaseColumns;
-import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.webkit.MimeTypeMap;
 import android.widget.Toast;
 
 import com.delaroystudios.uploadmedia.networking.ApiConfig;
 import com.delaroystudios.uploadmedia.networking.AppConfig;
-import com.delaroystudios.uploadmedia.networking.ServerResponse;
 import com.github.barteksc.pdfviewer.PDFView;
 import com.github.barteksc.pdfviewer.listener.OnLoadCompleteListener;
 import com.github.barteksc.pdfviewer.listener.OnPageChangeListener;
@@ -30,7 +24,7 @@ import com.nbsp.materialfilepicker.ui.FilePickerActivity;
 import com.shockwave.pdfium.PdfDocument;
 
 import java.io.File;
-import java.net.URI;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +32,7 @@ import java.util.regex.Pattern;
 
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -103,11 +98,12 @@ public class PdfActivity extends AppCompatActivity implements OnPageChangeListen
 
         if (requestCode == FILE_PICKER_REQUEST_CODE && resultCode == RESULT_OK) {
             String path = data.getStringExtra(FilePickerActivity.RESULT_FILE_PATH);
-            File file = new File(path);
-            displayFromFile(file);
+            //File file = new File(path);
+            //displayFromFile(file);
             if (path != null) {
                 Log.d("Path: ", path);
                 pdfPath = path;
+                uploadFile();
                 Toast.makeText(this, "Picked file: " + path, Toast.LENGTH_LONG).show();
             }
         }
@@ -180,6 +176,7 @@ public class PdfActivity extends AppCompatActivity implements OnPageChangeListen
 
     }
 
+
     private void uploadFile() {
         if (pdfPath == null) {
             Toast.makeText(this, "please select an image ", Toast.LENGTH_LONG).show();
@@ -193,32 +190,106 @@ public class PdfActivity extends AppCompatActivity implements OnPageChangeListen
             // Parsing any Media type file
             RequestBody requestBody = RequestBody.create(MediaType.parse("application/pdf"), file);
             map.put("file\"; filename=\"" + file.getName() + "\"", requestBody);
+
+            RequestBody passwordBody = RequestBody.create(MediaType.parse("*/*"), "A*******C.");
+            map.put("password", passwordBody);
+
             ApiConfig getResponse = AppConfig.getRetrofit().create(ApiConfig.class);
-            Call<ServerResponse> call = getResponse.upload("token", map);
-            call.enqueue(new Callback<ServerResponse>() {
+
+            //Existing server response
+//            Call<ServerResponse> call = getResponse.upload("token", map);
+//            call.enqueue(new Callback<ServerResponse>() {
+//                @Override
+//                public void onResponse(Call<ServerResponse> call, Response<ServerResponse> response) {
+//                    if (response.isSuccessful()){
+//                        if (response.body() != null){
+//                            hidepDialog();
+//                            ServerResponse serverResponse = response.body();
+//                            Toast.makeText(getApplicationContext(), serverResponse.getMessage(), Toast.LENGTH_SHORT).show();
+//
+//                        }
+//                    }else {
+//                        hidepDialog();
+//                        Toast.makeText(getApplicationContext(), "problem image", Toast.LENGTH_SHORT).show();
+//                    }
+//                }
+//
+//                @Override
+//                public void onFailure(Call<ServerResponse> call, Throwable t) {
+//                    hidepDialog();
+//                    Log.v("Response gotten is", t.getMessage());
+//                    Toast.makeText(getApplicationContext(), "problem uploading image " + t.getMessage(), Toast.LENGTH_SHORT).show();
+//
+//                }
+//            });
+
+            //Tried custom factory mtd
+//            Call<UploadResponse> call = getResponse.uploadResponse("token", map);
+//            call.enqueue(new Callback<UploadResponse>() {
+//                @Override
+//                public void onResponse(Call<UploadResponse> call, Response<UploadResponse> response) {
+//                    if (response.isSuccessful()){
+//                        if (response.body() != null){
+//                            hidepDialog();
+//                            //ServerResponse serverResponse = response.body();
+//                            UploadResponse uploadResponse = response.body();
+//                            //Toast.makeText(getApplicationContext(), serverResponse.getMessage(), Toast.LENGTH_SHORT).show();
+//                            Log.e(ApiConfig.TAG," Response "+uploadResponse.toString());
+//                            Toast.makeText(getApplicationContext(), Boolean.toString(uploadResponse.getSuccess()), Toast.LENGTH_SHORT).show();
+//
+//                        }
+//                    }else {
+//                        hidepDialog();
+//                        Log.e(ApiConfig.TAG," Response failed  ");
+//                        Toast.makeText(getApplicationContext(), "problem image", Toast.LENGTH_SHORT).show();
+//                    }
+//                }
+//
+//                @Override
+//                public void onFailure(Call<UploadResponse> call, Throwable t) {
+//                    hidepDialog();
+//                    Log.v("Response gotten is", t.getMessage());
+//                    Toast.makeText(getApplicationContext(), "problem uploading image " + t.getMessage(), Toast.LENGTH_SHORT).show();
+//
+//                }
+//            });
+
+            //Directly use okhttp3's resposeBody then use our custom deserialiseble
+            Call<ResponseBody> call = getResponse.uploadResponse("token", map);
+            call.enqueue(new Callback<ResponseBody>() {
                 @Override
-                public void onResponse(Call<ServerResponse> call, Response<ServerResponse> response) {
+                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                     if (response.isSuccessful()){
                         if (response.body() != null){
                             hidepDialog();
-                            ServerResponse serverResponse = response.body();
-                            Toast.makeText(getApplicationContext(), serverResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                            //ServerResponse serverResponse = response.body();
+                            ResponseBody uploadResponse = response.body();
+                            //Toast.makeText(getApplicationContext(), serverResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                            try {
+                                Log.e(ApiConfig.TAG, " Response " + uploadResponse.string());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            //Toast.makeText(getApplicationContext(), Boolean.toString(uploadResponse.getSuccess()), Toast.LENGTH_SHORT).show();
 
                         }
                     }else {
                         hidepDialog();
+                        Log.e(ApiConfig.TAG, " Response failed  ");
                         Toast.makeText(getApplicationContext(), "problem image", Toast.LENGTH_SHORT).show();
                     }
                 }
 
                 @Override
-                public void onFailure(Call<ServerResponse> call, Throwable t) {
+                public void onFailure(Call<ResponseBody> call, Throwable t) {
                     hidepDialog();
                     Log.v("Response gotten is", t.getMessage());
                     Toast.makeText(getApplicationContext(), "problem uploading image " + t.getMessage(), Toast.LENGTH_SHORT).show();
 
                 }
             });
+
+
         }
     }
 
