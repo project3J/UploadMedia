@@ -21,4 +21,8 @@ public interface ApiConfig {
             @Header("Authorization") String authorization,
             @PartMap Map<String, RequestBody> map
     );
+
+
+    //TODO: Add your own commits
+
 }
