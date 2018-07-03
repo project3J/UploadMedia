@@ -54,4 +54,12 @@ public interface ApiConfig {
     //B] comMit#11.....this is new commit followed by push all together including chngelist got
     //      from undo cOMmit#10.......but while commiting you have to select that chngelist instead of default to able to commit
 
+    //--------New case -> multiple times shelf changes -----------
+
+    //Adding this line after switching the branch ....applying the shelf#6....from tht chklist....now
+    // commit it undo it.... add....commit then push....
+
+
+    //Commit#13......will be pushed by making chnge in commit#12 whch is undone.....
+
 }
