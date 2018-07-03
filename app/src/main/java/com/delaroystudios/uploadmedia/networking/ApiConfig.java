@@ -43,4 +43,9 @@ public interface ApiConfig {
 
     //THis is only commit#7 then followed by push from studio
 
+    //-----Another case commit..then undo commit...makes chnges same line...commit then push
+    //1.only commit#8 whch will b undo then ....this line modified at same ...where previous line was..
+
+    //2. after undo commit#8...this is changelist with this new line.....commit then push check whats the push shows in parent
+
 }
