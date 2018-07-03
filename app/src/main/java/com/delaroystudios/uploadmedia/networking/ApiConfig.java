@@ -48,4 +48,10 @@ public interface ApiConfig {
 
     //2. after undo commit#8...this is changelist with this new line.....commit then push check whats the push shows in parent
 
+
+    //------3rd case for same use case :) ......
+    //A] cOMmit#10 ......this line has now been modified ....only commit then undo it...
+    //B] comMit#11.....this is new commit followed by push all together including chngelist got
+    //      from undo cOMmit#10.......but while commiting you have to select that chngelist instead of default to able to commit
+
 }
